@@ -35,9 +35,7 @@ with tab1:
     if st.button("Read Resume"):
         res = requests.post(f"{SERVER_URL}/agent/resume_reader",json={"resume_text": resume_text,"job_description": job_description})
         data = res.json()
-
-        st.markdown("## Resume Content")
-
+        st.subheader("Resume Content")
         st.write(data["result"])
 
 
