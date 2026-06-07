@@ -34,19 +34,24 @@ with tab1:
 
     if st.button("Read Resume"):
         res = requests.post(f"{SERVER_URL}/agent/resume_reader",json={"resume_text": resume_text,"job_description": job_description})
-        st.write(res.json()["result"])
+        st.write("Status:", res.status_code)
+        st.write("Raw Response:", res.text)
 
 
 with tab2:
     if st.button("Match Job"):
         res = requests.post(f"{SERVER_URL}/agent/job_matcher",json={"resume_text": resume_text,"job_description": job_description})
-        st.write(res.json()["result"])
+        st.write("Status Code:", res.status_code)
+        st.write("Response Text:", res.text)
+
+        try:
+            data = res.json()
+            st.write(data.get("result"))
+        except Exception as e:
+            st.error(f"JSON Error: {e}")
 
 
 with tab3:
     if st.button("Calculate ATS"):
         res = requests.post(f"{SERVER_URL}/agent/ats_score",json={"resume_text": resume_text,"job_description": job_description})
-        score = res.json()["result"]
-        st.metric("ATS Score",f"{score}%")
-        st.progress(int(score))
-        st.write(f"Match Percentage: {score}%")
+        st.metric("ATS Score",res.json()["result"])
