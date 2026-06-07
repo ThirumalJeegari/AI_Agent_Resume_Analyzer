@@ -46,4 +46,7 @@ with tab2:
 with tab3:
     if st.button("Calculate ATS"):
         res = requests.post(f"{SERVER_URL}/agent/ats_score",json={"resume_text": resume_text,"job_description": job_description})
-        st.metric("ATS Score",res.json()["result"])
+        score = res.json()["result"]
+        st.metric("ATS Score",f"{score}%")
+        st.progress(int(score))
+        st.write(f"Match Percentage: {score}%")
