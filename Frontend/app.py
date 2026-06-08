@@ -19,7 +19,6 @@ query = st.text_input(
     "Ask the Agent"
 )
 
-
 def read_pdf(file):
 
     reader = PdfReader(file)
@@ -44,39 +43,13 @@ if resume:
 
 if st.button("Run Agent"):
 
-    try:
+    response = requests.post(
+        f"{SERVER_URL}/agent",
+        json={
+            "user_query": query,
+            "resume_text": resume_text,
+            "job_description": job_description
+        }
+    )
 
-        response = requests.post(
-            f"{SERVER_URL}/agent",
-            json={
-                "user_query": query,
-                "resume_text": resume_text,
-                "job_description": job_description
-            },
-            timeout=60
-        )
-
-        st.write("Status Code:", response.status_code)
-
-        data = response.json()
-
-        st.subheader("Agent Response")
-
-        # Show complete response
-        st.json(data)
-
-        # Optional pretty display
-        if "tool_used" in data:
-            st.success(f"Tool Used: {data['tool_used']}")
-
-        if "result" in data:
-            st.write(data["result"])
-
-        if "ats_score" in data:
-            st.metric("ATS Score", data["ats_score"])
-
-        if "analysis" in data:
-            st.write(data["analysis"])
-
-    except Exception as e:
-        st.error(f"Error: {str(e)}")
+    st.json(response.json())
