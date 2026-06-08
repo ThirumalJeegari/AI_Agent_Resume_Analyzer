@@ -2,23 +2,37 @@ import streamlit as st
 import requests
 from PyPDF2 import PdfReader
 
-SERVER_URL = "https://ai-agent-resume-analyzer.onrender.com"
+SERVER_URL = "https://your-render-url.onrender.com"
 
+st.title("AI Resume Analyzer Agent")
 
-st.title("AI Resume Analyzer")
+resume = st.file_uploader(
+    "Upload Resume",
+    type="pdf"
+)
 
-resume = st.file_uploader("Upload Resume",type="pdf")
+job_description = st.text_area(
+    "Paste Job Description"
+)
 
-job_description = st.text_area("Paste Job Description")
+query = st.text_input(
+    "Ask the Agent"
+)
 
 
 def read_pdf(file):
+
     reader = PdfReader(file)
+
     text = ""
+
     for page in reader.pages:
+
         page_text = page.extract_text()
+
         if page_text:
             text += page_text
+
     return text
 
 
@@ -27,28 +41,42 @@ resume_text = ""
 if resume:
     resume_text = read_pdf(resume)
 
-tab1, tab2, tab3 = st.tabs(["Resume Reader","Job Matcher","ATS Score"])
 
+if st.button("Run Agent"):
 
-with tab1:
+    try:
 
-    if st.button("Read Resume"):
-        res = requests.post(f"{SERVER_URL}/agent/resume_reader",json={"resume_text": resume_text,"job_description": job_description})
-        data = res.json()
-        st.subheader("Resume Content")
-        st.write(data["result"])
+        response = requests.post(
+            f"{SERVER_URL}/agent",
+            json={
+                "user_query": query,
+                "resume_text": resume_text,
+                "job_description": job_description
+            },
+            timeout=60
+        )
 
+        st.write("Status Code:", response.status_code)
 
-with tab2:
-    if st.button("Match Job"):
-        res = requests.post(f"{SERVER_URL}/agent/job_matcher",json={"resume_text": resume_text,"job_description": job_description})
-        data = res.json()
-        st.subheader("Resume Analysis")
-        st.write(data["result"])
+        data = response.json()
 
+        st.subheader("Agent Response")
 
+        # Show complete response
+        st.json(data)
 
-with tab3:
-    if st.button("Calculate ATS"):
-        res = requests.post(f"{SERVER_URL}/agent/ats_score",json={"resume_text": resume_text,"job_description": job_description})
-        st.metric("ATS Score",res.json()["result"])
+        # Optional pretty display
+        if "tool_used" in data:
+            st.success(f"Tool Used: {data['tool_used']}")
+
+        if "result" in data:
+            st.write(data["result"])
+
+        if "ats_score" in data:
+            st.metric("ATS Score", data["ats_score"])
+
+        if "analysis" in data:
+            st.write(data["analysis"])
+
+    except Exception as e:
+        st.error(f"Error: {str(e)}")
